@@ -1,0 +1,36 @@
+FROM fedora:40
+USER 0
+
+#For enabling Mac GPU Abstraction
+RUN dnf -y install dnf-plugins-core dnf-plugin-versionlock mesa-vulkan-drivers vulkan-loader-devel vulkan-headers vulkan-tools vulkan-loader glslc git
+RUN dnf -y copr enable slp/mesa-krunkit fedora-40-aarch64
+RUN dnf -y downgrade mesa-vulkan-drivers.aarch64 --repo=copr:copr.fedorainfracloud.org:slp:mesa-krunkit
+RUN dnf versionlock mesa-vulkan-drivers
+RUN dnf clean all
+
+#For enabling h264
+RUN dnf -y install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+RUN dnf config-manager --enable fedora-cisco-openh264
+
+#For compiling video2x
+RUN dnf -y install cmake clang ninja-build glslang spdlog-devel boost-devel git wget ffmpeg-devel x264-devel
+
+COPY . /video2x
+WORKDIR /video2x
+
+RUN git submodule update --init --recursive
+
+RUN cmake -G 'Ninja' -B build -S . \
+        -DVIDEO2X_USE_EXTERNAL_NCNN=OFF \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local
+
+RUN cmake --build build --config Release --parallel
+
+RUN cmake --install build
+
+ENV LD_LIBRARY_PATH=/usr/local/lib64/
+
+WORKDIR /host
+ENTRYPOINT ["/usr/local/bin/video2x"]

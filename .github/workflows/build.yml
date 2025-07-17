@@ -123,6 +123,21 @@ jobs:
           tags: latest
           pushImage: false
 
+  container-apple:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: mr-smithers-excellent/docker-build-push@v5
+        name: Build the Docker image
+        with:
+          registry: ghcr.io
+          dockerfile: packaging/docker/Containerfile.apple
+          image: video2x
+          tags: latest
+          pushImage: false
+
   appimage:
     runs-on: ubuntu-latest
     steps:
