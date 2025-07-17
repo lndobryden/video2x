@@ -134,9 +134,10 @@ jobs:
         with:
           registry: ghcr.io
           dockerfile: packaging/docker/Containerfile.apple
-          image: video2x
+          image: video2x-apple
           tags: latest
-          pushImage: false
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   appimage:
     runs-on: ubuntu-latest
